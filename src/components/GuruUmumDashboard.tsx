@@ -49,7 +49,7 @@ export default function GuruUmumDashboard() {
     'IPA 78',
     'IPA 9',
     'MTK 9',
-    'MTK 89',
+    'MTK 78',
     'BIN 789'
   ];
 
@@ -326,7 +326,7 @@ export default function GuruUmumDashboard() {
               )}
             </div>
             
-            {/* 2. Mapel Biro: BIG 789, IPA 78, IPA 9, MTK 9, MTK 89, BIN 789 */}
+            {/* 2. Mapel Biro: BIG 789, IPA 78, IPA 9, MTK 9, MTK 78, BIN 789 */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
                 Mapel Biro

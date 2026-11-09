@@ -51,7 +51,7 @@ export const DEFAULT_TEACHERS: Teacher[] = [
   { id: 't-sarah', name: 'Sarah Amelia, S.Pd.', subject: 'BIG 789', createdAt: 1700000000000 },
   { id: 't-widya', name: 'Widya, S.Pd.', subject: 'IPA 78', createdAt: 1700000000000 },
   { id: 't-joko', name: 'Joko Susanto, S.Pd.', subject: 'IPA 9', createdAt: 1700000000000 },
-  { id: 't-mega', name: 'Mega Rahmawati, S.Pd.', subject: 'MTK 89', createdAt: 1700000000000 },
+  { id: 't-mega', name: 'Mega Rahmawati, S.Pd.', subject: 'MTK 78', createdAt: 1700000000000 },
   { id: 't-rini', name: 'Rini Astuti, M.Pd.', subject: 'MTK 9', createdAt: 1700000000000 },
   { id: 't-charir', name: 'Charir Maulana, S.Pd.', subject: 'BIN 789', createdAt: 1700000000000 },
   { id: 't-angga', name: 'Pak Angga', subject: 'BIG', createdAt: 1700000000000 },

@@ -250,12 +250,12 @@ export default function UserManager() {
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  placeholder={role === 'guru_biro' ? "Pilih atau ketik: BIG 789, IPA 78, IPA 9, MTK 9, MTK 89, BIN 789" : "Contoh: BIG, IPA, MTK, BIN..."}
+                  placeholder={role === 'guru_biro' ? "Pilih atau ketik: BIG 789, IPA 78, IPA 9, MTK 9, MTK 78, BIN 789" : "Contoh: BIG, IPA, MTK, BIN..."}
                   className="w-full px-5 py-3 bg-slate-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-indigo-600 transition font-medium text-sm"
                 />
                 {role === 'guru_biro' && (
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {['BIG 789', 'IPA 78', 'IPA 9', 'MTK 9', 'MTK 89', 'BIN 789'].map((mb) => (
+                    {['BIG 789', 'IPA 78', 'IPA 9', 'MTK 9', 'MTK 78', 'BIN 789'].map((mb) => (
                       <button
                         key={mb}
                         type="button"
