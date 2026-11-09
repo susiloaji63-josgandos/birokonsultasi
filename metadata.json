@@ -1,0 +1,6 @@
+{
+  "name": "Hadirin - BIRO KONSULTASI MATA PELAJARAN",
+  "description": "Sistem presensi terpadu untuk Biro Konsultasi Mata Pelajaran, mengelola kehadiran siswa dan guru secara efisien.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
