@@ -26,6 +26,7 @@ export default function GuruUmumDashboard() {
   const { user, allUsers } = useAuth();
   const { students, teachers, journals, addJournal, addStudent } = useAttendanceContext();
   
+  const [teacherName, setTeacherName] = useState(user?.name || '');
   const [selectedSubject, setSelectedSubject] = useState('-- Pilih Mata Pelajaran --');
   const [customSubject, setCustomSubject] = useState('');
   const [selectedMapelBiro, setSelectedMapelBiro] = useState('-- Pilih Mapel Biro --');
@@ -65,9 +66,9 @@ export default function GuruUmumDashboard() {
   const findMatchingGuruBiro = (mapelBiroVal: string) => {
     if (!mapelBiroVal || mapelBiroVal === '-- Pilih Mapel Biro --') return null;
 
-    const target = mapelBiroVal.toLowerCase().trim(); // e.g. "big 789", "ipa 78", "ipa 9", "mtk 9", "mtk 89", "bin 789"
+    const target = mapelBiroVal.toLowerCase().trim(); // e.g. "big 789", "ipa 78", "ipa 9", "mtk 9", "mtk 78", "bin 789"
     const prefix = target.split(' ')[0]; // "big", "ipa", "mtk", "bin"
-    const gradePart = target.split(' ')[1] || ''; // "789", "78", "9", "89"
+    const gradePart = target.split(' ')[1] || ''; // "789", "78", "9", "78"
 
     // 1. Exact match on teacher.subject (case-insensitive)
     const exact = guruBiroUsers.find(u => {
@@ -144,6 +145,12 @@ export default function GuruUmumDashboard() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!teacherName.trim()) {
+      setError('Harap isi Nama Guru Mapel.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
     const finalSubject = selectedSubject === 'Lainnya (Isi Manual)' 
       ? customSubject.trim() 
       : selectedSubject;
@@ -162,7 +169,7 @@ export default function GuruUmumDashboard() {
 
     addJournal({
       teacherId: user?.id || 'anon',
-      teacherName: user?.name || 'Anon',
+      teacherName: teacherName.trim(),
       studentName: selectedStudent !== '-- Pilih Siswa --' ? selectedStudent : undefined,
       date: new Date().toISOString().split('T')[0],
       grade: selectedGrade,
@@ -205,9 +212,9 @@ export default function GuruUmumDashboard() {
 
   const teacherJournals = useMemo(() => {
     return journals
-      .filter(j => j.teacherId === user?.id)
+      .filter(j => j.teacherId === user?.id || j.teacherName.toLowerCase() === (teacherName || user?.name || '').toLowerCase())
       .sort((a, b) => b.timestamp - a.timestamp);
-  }, [journals, user]);
+  }, [journals, user, teacherName]);
 
   return (
     <div className="space-y-8 pb-24 relative">
@@ -282,9 +289,34 @@ export default function GuruUmumDashboard() {
         </AnimatePresence>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Row 1: Mata Pelajaran, Mapel Biro, and Pilih Guru Biro (Otomatis) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* 1. Mata Pelajaran: BIG, IPA, MTK, BIN, Lainnya (isi manual) */}
+          {/* Row 1: Nama Guru Mapel (Diisi Manual), Mata Pelajaran, Mapel Biro, and Pilih Guru Biro (Otomatis) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* 1. Nama Guru Mapel (Diisi Manual) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Nama Guru Mapel
+                </label>
+                <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md uppercase border border-emerald-100">
+                  Manual
+                </span>
+              </div>
+              <div className="relative">
+                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input 
+                  type="text" 
+                  value={teacherName} 
+                  onChange={(e) => setTeacherName(e.target.value)}
+                  placeholder="Ketik nama guru mapel..."
+                  className="w-full pl-11 pr-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition font-bold text-sm text-slate-800"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 font-bold px-1">
+                Bisa diisi / diedit manual
+              </p>
+            </div>
+
+            {/* 2. Mata Pelajaran: BIG, IPA, MTK, BIN, Lainnya (isi manual) */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
                 Mata Pelajaran
@@ -326,7 +358,7 @@ export default function GuruUmumDashboard() {
               )}
             </div>
             
-            {/* 2. Mapel Biro: BIG 789, IPA 78, IPA 9, MTK 9, MTK 78, BIN 789 */}
+            {/* 3. Mapel Biro: BIG 789, IPA 78, IPA 9, MTK 9, MTK 78, BIN 789 */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
                 Mapel Biro
@@ -346,7 +378,7 @@ export default function GuruUmumDashboard() {
               </p>
             </div>
 
-            {/* 3. Pilih Guru Biro (Diisi Otomatis) */}
+            {/* 4. Pilih Guru Biro (Diisi Otomatis) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between px-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
