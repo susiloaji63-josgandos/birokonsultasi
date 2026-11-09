@@ -27,11 +27,12 @@ export default function GuruUmumDashboard() {
   const { students, teachers, journals, addJournal, addStudent } = useAttendanceContext();
   
   const [selectedSubject, setSelectedSubject] = useState('-- Pilih Mata Pelajaran --');
-  const [teacherName, setTeacherName] = useState(user?.name || '');
+  const [customSubject, setCustomSubject] = useState('');
+  const [selectedMapelBiro, setSelectedMapelBiro] = useState('-- Pilih Mapel Biro --');
+  const [selectedGuruBiroId, setSelectedGuruBiroId] = useState('-- Pilih Guru Biro --');
   const [selectedTreatment, setSelectedTreatment] = useState('-- Pilih Treatment --');
   const [selectedGrade, setSelectedGrade] = useState('-- Pilih Kelas --');
   const [selectedStudent, setSelectedStudent] = useState('-- Pilih Siswa --');
-  const [selectedGuruBiroId, setSelectedGuruBiroId] = useState('-- Pilih Guru Biro --');
   const [notes, setNotes] = useState('');
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -43,6 +44,15 @@ export default function GuruUmumDashboard() {
   const [newStudentGrade, setNewStudentGrade] = useState('-- Pilih Kelas --');
   const [newStudentObstacle, setNewStudentObstacle] = useState('');
 
+  const MAPEL_BIRO_OPTIONS = [
+    'BIG 789',
+    'IPA 78',
+    'IPA 9',
+    'MTK 9',
+    'MTK 89',
+    'BIN 789'
+  ];
+
   const teacherProfile = useMemo(() => {
     return teachers.find(t => t.id === user?.teacherId);
   }, [teachers, user]);
@@ -50,6 +60,69 @@ export default function GuruUmumDashboard() {
   const guruBiroUsers = useMemo(() => {
     return allUsers.filter(u => u.role === 'guru_biro');
   }, [allUsers]);
+
+  // Find matching Guru Biro when Mapel Biro is selected
+  const findMatchingGuruBiro = (mapelBiroVal: string) => {
+    if (!mapelBiroVal || mapelBiroVal === '-- Pilih Mapel Biro --') return null;
+
+    const target = mapelBiroVal.toLowerCase().trim(); // e.g. "big 789", "ipa 78", "ipa 9", "mtk 9", "mtk 89", "bin 789"
+    const prefix = target.split(' ')[0]; // "big", "ipa", "mtk", "bin"
+    const gradePart = target.split(' ')[1] || ''; // "789", "78", "9", "89"
+
+    // 1. Exact match on teacher.subject (case-insensitive)
+    const exact = guruBiroUsers.find(u => {
+      const prof = teachers.find(t => t.id === u.teacherId || t.name.toLowerCase() === u.name.toLowerCase());
+      return prof && prof.subject.toLowerCase().trim() === target;
+    });
+    if (exact) return exact;
+
+    // 2. Match with gradePart (e.g. teacher.subject contains "ipa" and "78")
+    if (gradePart) {
+      const withGrade = guruBiroUsers.find(u => {
+        const prof = teachers.find(t => t.id === u.teacherId || t.name.toLowerCase() === u.name.toLowerCase());
+        if (!prof) return false;
+        const s = prof.subject.toLowerCase();
+        const hasPrefix = s.includes(prefix) || 
+          (prefix === 'big' && s.includes('inggris')) || 
+          (prefix === 'mtk' && s.includes('mat')) || 
+          (prefix === 'bin' && s.includes('indonesia'));
+        return hasPrefix && s.includes(gradePart);
+      });
+      if (withGrade) return withGrade;
+    }
+
+    // 3. Match on subject prefix / keyword (e.g. 'IPA' matches teacher with subject 'IPA')
+    const withPrefix = guruBiroUsers.find(u => {
+      const prof = teachers.find(t => t.id === u.teacherId || t.name.toLowerCase() === u.name.toLowerCase());
+      if (!prof) return false;
+      const s = prof.subject.toLowerCase();
+      if (prefix === 'big') return s.includes('big') || s.includes('inggris');
+      if (prefix === 'ipa') return s.includes('ipa') || s.includes('alam');
+      if (prefix === 'mtk') return s.includes('mtk') || s.includes('matematika');
+      if (prefix === 'bin') return s.includes('bin') || s.includes('indonesia');
+      return s.includes(prefix);
+    });
+    if (withPrefix) return withPrefix;
+
+    return null;
+  };
+
+  const handleMapelBiroChange = (mapelBiroValue: string) => {
+    setSelectedMapelBiro(mapelBiroValue);
+
+    if (mapelBiroValue === '-- Pilih Mapel Biro --') {
+      setSelectedGuruBiroId('-- Pilih Guru Biro --');
+      return;
+    }
+
+    // Automatically fill / select the corresponding Guru Biro
+    const matchedUser = findMatchingGuruBiro(mapelBiroValue);
+    if (matchedUser) {
+      setSelectedGuruBiroId(matchedUser.id);
+    } else {
+      setSelectedGuruBiroId('-- Pilih Guru Biro --');
+    }
+  };
 
   const selectedGuruBiroProfile = useMemo(() => {
     if (selectedGuruBiroId === '-- Pilih Guru Biro --') return null;
@@ -71,13 +144,21 @@ export default function GuruUmumDashboard() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedSubject === '-- Pilih Mata Pelajaran --' || selectedGrade === '-- Pilih Kelas --' || !notes) {
-      setError('Harap isi semua field yang wajib.');
+    const finalSubject = selectedSubject === 'Lainnya (Isi Manual)' 
+      ? customSubject.trim() 
+      : selectedSubject;
+
+    if (!finalSubject || finalSubject === '-- Pilih Mata Pelajaran --') {
+      setError('Harap pilih atau isi Mata Pelajaran.');
       setTimeout(() => setError(''), 3000);
       return;
     }
 
-    const bBiroInfo = selectedGuruBiroProfile ? ` [Biro: ${selectedGuruBiroProfile.name} - ${selectedGuruBiroProfile.subject}]` : '';
+    if (selectedGrade === '-- Pilih Kelas --' || !notes.trim()) {
+      setError('Harap isi Kelas dan Catatan Hambatan/Materi.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
 
     addJournal({
       teacherId: user?.id || 'anon',
@@ -85,15 +166,17 @@ export default function GuruUmumDashboard() {
       studentName: selectedStudent !== '-- Pilih Siswa --' ? selectedStudent : undefined,
       date: new Date().toISOString().split('T')[0],
       grade: selectedGrade,
-      subject: selectedSubject,
+      subject: finalSubject,
       topic: notes.substring(0, 50) + '...', // Topic as excerpt
       notes: notes,
       treatment: selectedTreatment !== '-- Pilih Treatment --' ? selectedTreatment : 'Biro Umum',
-      bureauTeacherId: selectedGuruBiroId !== '-- Pilih Guru Biro --' ? selectedGuruBiroId : undefined
+      bureauTeacherId: selectedGuruBiroId !== '-- Pilih Guru Biro --' ? selectedGuruBiroId : undefined,
+      mapelBiro: selectedMapelBiro !== '-- Pilih Mapel Biro --' ? selectedMapelBiro : undefined
     });
 
-    setSuccess('Data berhasil disimpan ke database!');
+    setSuccess('Data materi pembelajaran berhasil disimpan ke database!');
     setNotes('');
+    setCustomSubject('');
     setSelectedStudent('-- Pilih Siswa --');
     setTimeout(() => setSuccess(''), 3000);
   };
@@ -199,55 +282,118 @@ export default function GuruUmumDashboard() {
         </AnimatePresence>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Row 1: Mata Pelajaran, Mapel Biro, and Pilih Guru Biro (Otomatis) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* 1. Mata Pelajaran: BIG, IPA, MTK, BIN, Lainnya (isi manual) */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Mata Pelajaran</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                Mata Pelajaran
+              </label>
               <select 
                 value={selectedSubject} 
-                onChange={(e) => setSelectedSubject(e.target.value)}
-                className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition font-medium text-sm"
+                onChange={(e) => {
+                  setSelectedSubject(e.target.value);
+                  if (e.target.value !== 'Lainnya (Isi Manual)') {
+                    setCustomSubject('');
+                  }
+                }}
+                className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition font-bold text-sm text-slate-800"
               >
                 <option disabled>-- Pilih Mata Pelajaran --</option>
-                {teacherProfile?.subject && <option value={teacherProfile.subject}>{teacherProfile.subject}</option>}
-                <option value="Bahasa Inggris">Bahasa Inggris</option>
+                <option value="BIG">BIG</option>
                 <option value="IPA">IPA</option>
-                <option value="Matematika">Matematika</option>
-                <option value="Bahasa Indonesia">Bahasa Indonesia</option>
-                <option value="PAI">PAI</option>
-                <option value="PPKN">PPKN</option>
+                <option value="MTK">MTK</option>
+                <option value="BIN">BIN</option>
+                <option value="Lainnya (Isi Manual)">Lainnya (Isi Manual)</option>
               </select>
+
+              {selectedSubject === 'Lainnya (Isi Manual)' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="pt-1.5"
+                >
+                  <input
+                    type="text"
+                    value={customSubject}
+                    onChange={(e) => setCustomSubject(e.target.value)}
+                    placeholder="Ketik nama mata pelajaran manual..."
+                    className="w-full px-5 py-3.5 bg-white border-2 border-emerald-500 rounded-2xl outline-none focus:border-emerald-600 transition font-bold text-sm text-slate-800 shadow-sm"
+                    autoFocus
+                  />
+                </motion.div>
+              )}
             </div>
             
+            {/* 2. Mapel Biro: BIG 789, IPA 78, IPA 9, MTK 9, MTK 89, BIN 789 */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Pilih Guru Biro</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                Mapel Biro
+              </label>
               <select 
-                value={selectedGuruBiroId} 
-                onChange={(e) => setSelectedGuruBiroId(e.target.value)}
-                className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition font-medium text-sm"
+                value={selectedMapelBiro} 
+                onChange={(e) => handleMapelBiroChange(e.target.value)}
+                className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition font-bold text-sm text-emerald-700"
               >
-                <option disabled>-- Pilih Guru Biro --</option>
-                <option value="-- Pilih Guru Biro --">Tidak Ada / Umum</option>
-                {guruBiroUsers.map(u => (
-                  <option key={u.id} value={u.id}>{u.name}</option>
+                <option disabled>-- Pilih Mapel Biro --</option>
+                {MAPEL_BIRO_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
                 ))}
               </select>
+              <p className="text-[10px] text-slate-400 font-bold px-1">
+                Pilih mapel biro dulu, guru biro muncul otomatis
+              </p>
             </div>
 
+            {/* 3. Pilih Guru Biro (Diisi Otomatis) */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Mapel Biro (Otomatis)</label>
-              <div className="relative">
-                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input 
-                  type="text" 
-                  readOnly
-                  value={selectedGuruBiroProfile?.subject || '-'} 
-                  className="w-full pl-11 pr-5 py-3.5 bg-slate-100 border border-transparent rounded-2xl outline-none font-black text-emerald-600 text-sm"
-                  placeholder="Mapel biro..."
-                />
+              <div className="flex items-center justify-between px-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Pilih Guru Biro
+                </label>
+                {selectedGuruBiroId !== '-- Pilih Guru Biro --' && (
+                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md uppercase border border-emerald-100 animate-in fade-in">
+                    Otomatis Terisi
+                  </span>
+                )}
               </div>
+              <div className="relative">
+                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <select 
+                  value={selectedGuruBiroId} 
+                  onChange={(e) => setSelectedGuruBiroId(e.target.value)}
+                  className={`w-full pl-11 pr-5 py-3.5 rounded-2xl outline-none transition font-bold text-sm ${
+                    selectedMapelBiro === '-- Pilih Mapel Biro --' 
+                      ? 'bg-slate-100 text-slate-400 border border-slate-200' 
+                      : 'bg-emerald-50/60 border border-emerald-200 text-emerald-900 focus:bg-white focus:border-emerald-500'
+                  }`}
+                >
+                  <option disabled>-- Pilih Guru Biro --</option>
+                  {selectedMapelBiro === '-- Pilih Mapel Biro --' && (
+                    <option value="-- Pilih Guru Biro --">-- Pilih Mapel Biro Terlebih Dahulu --</option>
+                  )}
+                  {guruBiroUsers.map(u => {
+                    const prof = teachers.find(t => t.id === u.teacherId || t.name === u.name);
+                    return (
+                      <option key={u.id} value={u.id}>
+                        {u.name} {prof?.subject ? `(${prof.subject})` : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {selectedGuruBiroProfile && (
+                <div className="flex items-center gap-2 px-1 text-emerald-700 text-xs font-bold animate-in fade-in">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="truncate">Guru: {selectedGuruBiroProfile.name} • Mapel: {selectedGuruBiroProfile.subject}</span>
+                </div>
+              )}
             </div>
           </div>
 
+          {/* Row 2: Treatment, Kelas, Siswa */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Treatment</label>
@@ -287,6 +433,7 @@ export default function GuruUmumDashboard() {
             </div>
           </div>
 
+          {/* Row 3: Catatan / Hambatan Belajar */}
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Hambatan Belajar / Isi Materi</label>
             <textarea 
@@ -353,7 +500,12 @@ export default function GuruUmumDashboard() {
                       {format(new Date(j.timestamp), 'dd MMM yyyy, HH.mm')}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-emerald-600 font-black uppercase text-xs">{j.subject}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-emerald-600 font-black uppercase text-xs">{j.subject}</span>
+                        {j.mapelBiro && (
+                          <span className="text-[10px] font-bold text-slate-400 tracking-tighter">Biro: {j.mapelBiro}</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm font-black text-slate-900">{j.teacherName}</td>
                     <td className="px-6 py-4">

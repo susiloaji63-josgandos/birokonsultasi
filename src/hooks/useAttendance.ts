@@ -42,19 +42,66 @@ export interface TeachingJournal {
   notes: string;
   treatment?: string;
   bureauTeacherId?: string; // ID of the Guru Biro selected by Guru Umum
+  mapelBiro?: string; // Mapel Biro selected e.g. BIG 789, IPA 78, etc.
   status: 'pending' | 'approved' | 'rejected';
   timestamp: number;
 }
 
+export const DEFAULT_TEACHERS: Teacher[] = [
+  { id: 't-sarah', name: 'Sarah Amelia, S.Pd.', subject: 'BIG 789', createdAt: 1700000000000 },
+  { id: 't-widya', name: 'Widya, S.Pd.', subject: 'IPA 78', createdAt: 1700000000000 },
+  { id: 't-joko', name: 'Joko Susanto, S.Pd.', subject: 'IPA 9', createdAt: 1700000000000 },
+  { id: 't-mega', name: 'Mega Rahmawati, S.Pd.', subject: 'MTK 89', createdAt: 1700000000000 },
+  { id: 't-rini', name: 'Rini Astuti, M.Pd.', subject: 'MTK 9', createdAt: 1700000000000 },
+  { id: 't-charir', name: 'Charir Maulana, S.Pd.', subject: 'BIN 789', createdAt: 1700000000000 },
+  { id: 't-angga', name: 'Pak Angga', subject: 'BIG', createdAt: 1700000000000 },
+];
+
+export const DEFAULT_STUDENTS: Student[] = [
+  { id: 's-1', name: 'FILZA FAYRE FABIANTO', grade: '8E', createdAt: 1700000000000 },
+  { id: 's-2', name: 'ELANG PRATAMA PUTRA SANTOSO', grade: '8D', createdAt: 1700000000000 },
+  { id: 's-3', name: 'IZZ MURSYID AL GHIFARI', grade: '8C', createdAt: 1700000000000 },
+  { id: 's-4', name: 'ABDILLAH HAMIZAN ALWI', grade: '7A', createdAt: 1700000000000 },
+  { id: 's-5', name: 'ACHMAD NARENDRA ADITYA PUTRA', grade: '7A', createdAt: 1700000000000 },
+  { id: 's-6', name: 'ADAM ADNAN NABAWI', grade: '7A', createdAt: 1700000000000 },
+  { id: 's-7', name: 'ALDRICH TEGAR DEWANGGA', grade: '7A', createdAt: 1700000000000 },
+  { id: 's-8', name: 'ALLAN FAHREZA BAHTIAR', grade: '7A', createdAt: 1700000000000 },
+  { id: 's-9', name: 'ARSHAKA ASYIQAH WAHYU VERENDRA', grade: '7B', createdAt: 1700000000000 },
+  { id: 's-10', name: 'BAYU ISA PUTRA PRASETYA', grade: '7B', createdAt: 1700000000000 },
+  { id: 's-11', name: 'CHAESAR DIMAS ANGGA PRADITYA KURNIAWAN', grade: '8A', createdAt: 1700000000000 },
+  { id: 's-12', name: 'DAFFA ARRIFAT PUTRA LAKSONO', grade: '9A', createdAt: 1700000000000 },
+  { id: 's-13', name: 'EGA RADITYA PRATAMA', grade: '9B', createdAt: 1700000000000 },
+  { id: 's-14', name: 'FAHRI SYARIFUDDIN ATHAR', grade: '9C', createdAt: 1700000000000 },
+];
+
 export function useAttendance() {
   const [students, setStudents] = useState<Student[]>(() => {
     const saved = localStorage.getItem('hadirin_students');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return DEFAULT_STUDENTS;
+    try {
+      const parsed: Student[] = JSON.parse(saved);
+      if (parsed.length === 0) return DEFAULT_STUDENTS;
+      return parsed;
+    } catch {
+      return DEFAULT_STUDENTS;
+    }
   });
 
   const [teachers, setTeachers] = useState<Teacher[]>(() => {
     const saved = localStorage.getItem('hadirin_teachers');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return DEFAULT_TEACHERS;
+    try {
+      const parsed: Teacher[] = JSON.parse(saved);
+      const merged = [...parsed];
+      DEFAULT_TEACHERS.forEach(def => {
+        if (!merged.some(m => m.id === def.id || m.name.toLowerCase() === def.name.toLowerCase())) {
+          merged.push(def);
+        }
+      });
+      return merged;
+    } catch {
+      return DEFAULT_TEACHERS;
+    }
   });
 
   const [records, setRecords] = useState<AttendanceRecord[]>(() => {

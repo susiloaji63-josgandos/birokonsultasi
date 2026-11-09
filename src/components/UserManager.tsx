@@ -250,9 +250,27 @@ export default function UserManager() {
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  placeholder="Contoh: Matematika, Bahasa Inggris..."
+                  placeholder={role === 'guru_biro' ? "Pilih atau ketik: BIG 789, IPA 78, IPA 9, MTK 9, MTK 89, BIN 789" : "Contoh: BIG, IPA, MTK, BIN..."}
                   className="w-full px-5 py-3 bg-slate-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-indigo-600 transition font-medium text-sm"
                 />
+                {role === 'guru_biro' && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {['BIG 789', 'IPA 78', 'IPA 9', 'MTK 9', 'MTK 89', 'BIN 789'].map((mb) => (
+                      <button
+                        key={mb}
+                        type="button"
+                        onClick={() => setSubject(mb)}
+                        className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition ${
+                          subject === mb 
+                            ? 'bg-emerald-600 text-white border-emerald-600' 
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {mb}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

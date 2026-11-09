@@ -35,6 +35,17 @@ const DEFAULT_ADMIN: User = {
   needsPasswordChange: false,
 };
 
+export const DEFAULT_USERS: User[] = [
+  DEFAULT_ADMIN,
+  { id: 'gb-sarah', username: 'sarah', name: 'Sarah Amelia, S.Pd.', role: 'guru_biro', password: 'admin', teacherId: 't-sarah' },
+  { id: 'gb-widya', username: 'widya', name: 'Widya, S.Pd.', role: 'guru_biro', password: 'admin', teacherId: 't-widya' },
+  { id: 'gb-joko', username: 'joko', name: 'Joko Susanto, S.Pd.', role: 'guru_biro', password: 'admin', teacherId: 't-joko' },
+  { id: 'gb-mega', username: 'mega', name: 'Mega Rahmawati, S.Pd.', role: 'guru_biro', password: 'admin', teacherId: 't-mega' },
+  { id: 'gb-rini', username: 'rini', name: 'Rini Astuti, M.Pd.', role: 'guru_biro', password: 'admin', teacherId: 't-rini' },
+  { id: 'gb-charir', username: 'charir', name: 'Charir Maulana, S.Pd.', role: 'guru_biro', password: 'admin', teacherId: 't-charir' },
+  { id: 'gu-angga', username: 'angga', name: 'Pak Angga', role: 'guru_umum', password: 'admin', teacherId: 't-angga' },
+];
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('hadirin_auth_session');
@@ -43,8 +54,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [allUsers, setAllUsers] = useState<User[]>(() => {
     const saved = localStorage.getItem('hadirin_users');
-    if (!saved) return [DEFAULT_ADMIN];
-    return JSON.parse(saved);
+    if (!saved) return DEFAULT_USERS;
+    try {
+      const parsed: User[] = JSON.parse(saved);
+      const merged = [...parsed];
+      DEFAULT_USERS.forEach(def => {
+        if (!merged.some(m => m.username.toLowerCase() === def.username.toLowerCase() || m.id === def.id)) {
+          merged.push(def);
+        }
+      });
+      return merged;
+    } catch {
+      return DEFAULT_USERS;
+    }
   });
 
   useEffect(() => {
