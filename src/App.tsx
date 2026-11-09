@@ -198,7 +198,7 @@ function AppContent() {
             <div className="hidden sm:block">
               <h1 className={`text-xl font-black tracking-tight uppercase leading-none ${isAdmin ? 'text-white' : 'text-slate-900'}`}>
                 {user?.role === 'admin' ? 'Dashboard Admin' : 
-                 user?.role === 'guru_biro' ? 'Dashboard Guru Biro' : 
+                 user?.role === 'guru_biro' ? 'Selamat Datang Guru Biro' : 
                  'Dashboard Guru Mapel'}
               </h1>
               <p className={`text-[7px] font-bold tracking-widest uppercase mt-0.5 ${isAdmin ? 'text-slate-500' : 'text-slate-400'}`}>BIRO KONSULTASI MATA PELAJARAN</p>

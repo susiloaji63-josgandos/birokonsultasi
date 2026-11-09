@@ -37,7 +37,7 @@ export default function LoginPage() {
             <GraduationCap className="w-12 h-12 text-white" />
           </div>
           <div className="text-center">
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">Hadirin</h1>
+            <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">ABSENSI</h1>
             <p className="text-[10px] font-black text-slate-400 tracking-[0.1em] uppercase mt-1">BIRO KONSULTASI MATA PELAJARAN</p>
           </div>
         </div>
@@ -68,6 +68,13 @@ export default function LoginPage() {
               </button>
            </div>
         </div>
+
+        {activeRole === 'guru_biro' && (
+          <div className="mb-6 p-3 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center gap-2 text-emerald-700">
+            <Briefcase className="w-4 h-4 text-emerald-600" />
+            <span className="text-xs font-black uppercase tracking-wider">Selamat Datang Guru Biro</span>
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
           {error && (

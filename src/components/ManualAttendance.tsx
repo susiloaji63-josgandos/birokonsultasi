@@ -92,10 +92,10 @@ export default function ManualAttendance({ students, teachers, records, journals
     }));
   };
 
-  const handleAllPresent = () => {
+  const handleAllAbsent = () => {
     const newTemp = { ...tempAttendance };
     filteredStudents.forEach(s => {
-      newTemp[s.id] = { ...newTemp[s.id], status: 'H' };
+      newTemp[s.id] = { ...newTemp[s.id], status: 'A' };
     });
     setTempAttendance(newTemp);
   };
@@ -296,11 +296,11 @@ export default function ManualAttendance({ students, teachers, records, journals
                   />
                 </div>
                 <button 
-                  onClick={handleAllPresent}
-                  className="flex items-center gap-3 px-8 py-3.5 bg-white border-2 border-blue-50 text-blue-600 rounded-[20px] hover:bg-blue-50 transition font-black text-[10px] uppercase tracking-widest shadow-sm"
+                  onClick={handleAllAbsent}
+                  className="flex items-center gap-3 px-8 py-3.5 bg-white border-2 border-rose-100 text-rose-600 rounded-[20px] hover:bg-rose-50 hover:border-rose-200 transition font-black text-[10px] uppercase tracking-widest shadow-sm"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Set Semua Hadir
+                  <UserMinus className="w-4 h-4" />
+                  Set Semua Tidak Hadir
                 </button>
               </div>
             </div>
